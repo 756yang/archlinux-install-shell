@@ -1,0 +1,200 @@
+#!/bin/sh
+
+
+function connect_wifi ()
+{
+  ip a
+  echo "connected wifi (n to skip)......"
+  read ans
+  if ! [ "$ans" = n -o "$ans" = N ]; then
+    rfkill unblock wifi
+    printf "wifi interface? "
+    read ans
+    ip link set $ans up
+    echo "enter iwctl, manually connect:"
+    echo "station wlan0 scan"
+    echo "station wlan0 get-networks"
+    echo "station wlan0 connect <SSID>"
+    echo "station wlan0 show"
+    iwctl
+  fi
+  ping -c 4 archlinux.org
+}
+
+function mount_other_exec ()
+{
+  
+  if ! [ $* ]; then echo "mount other or exec......";fi
+  echo "manual mkpart and format, and mount......(short command list:)"
+  echo "mkgpt    create a gpt partition label."
+  echo "mkmbr    create a mbr partition label."
+  echo "mkfat    format a fat32 filesystem."
+  echo "mkext4    format a ext4 filesystem by lazy_init."
+  if [ $* ]; then
+    echo "mount_root    mount linux root to /mnt."
+    echo "mount_efi    mount efi partition to /mnt/boot/efi."
+    echo "mount_home    mount linux home to /mnt/home."
+    echo "mount_boot    mount linux boot to /mnt/boot (this can skip)."
+  fi
+  printf "please input command to exec (cfdisk or parted...) (exit to quit): "
+  while [ 1 ]
+  do
+    read ans
+    if [ "$ans" = mkgpt ]; then
+      printf "input device like sda (n to cancel): "
+      read ans
+      if ! [ "$ans" = n -o "$ans" = N ]; then parted -s /dev/$ans mklabel gpt;fi
+    elif [ "$ans" = mkmbr ]; then
+      printf "input device like sda (n to cancel): "
+      read ans
+      if ! [ "$ans" = n -o "$ans" = N ]; then parted -s /dev/$ans mklabel msdos;fi
+    elif [ "$ans" = mkfat ]; then
+      printf "device path (n to cancel)? "
+      read ans
+      if ! [ "$ans" = n -o "$ans" = N ]; then mkfs.fat -F32 $ans;fi
+    elif [ "$ans" = mkext4 ]; then
+      printf "device path (n to cancel)? "
+      read ans
+      if ! [ "$ans" = n -o "$ans" = N ]; then
+        mkfs.ext4 -b 4096 -E lazy_itable_init=0,lazy_journal_init=0 $ans
+      fi
+    elif [ "$ans" = mount_root -a "$*" ]; then
+      printf "device path (n to cancel)? "
+      read ans
+      if ! [ "$ans" = n -o "$ans" = N ]; then mount $ans /mnt;fi
+    elif [ "$ans" = mount_efi -a "$*" ]; then
+      echo "please mount root first and this will mount on boot/efi."
+      printf "device path (n to cancel)? "
+      read ans
+      if ! [ "$ans" = n -o "$ans" = N ]; then
+        if ! [ `ls /mnt | grep -w boot` ]; then mkdir /mnt/boot;fi
+        if ! [ `ls /mnt/boot | grep -w efi` ]; then mkdir /mnt/boot/efi;fi
+        mount $ans /mnt/boot/efi
+      fi
+    elif [ "$ans" = mount_home -a "$*" ]; then
+      printf "device path (n to cancel)? "
+      read ans
+      if ! [ "$ans" = n -o "$ans" = N ]; then
+        if ! [ `ls /mnt | grep -w home` ]; then mkdir /mnt/home;fi
+        mount $ans /mnt/home
+      fi
+    elif [ "$ans" = mount_boot -a "$*" ]; then
+      echo "note that mount_boot must before mount_efi!"
+      printf "device path (n to cancel)? "
+      read ans
+      if ! [ "$ans" = n -o "$ans" = N ]; then
+        if ! [ `ls /mnt | grep -w boot` ]; then mkdir /mnt/boot;fi
+        mount $ans /mnt/boot
+      fi
+    elif [ "$ans" = exit ]; then
+      break
+    else
+      eval $ans
+    fi
+    printf "archinstall? "
+  done
+}
+
+function parted_and_mount ()
+{
+  echo "create partition......"
+  printf "please input install device like sda (any for manual): "
+  read ans
+  if [ "$ans" != any ]; then
+    parted -s /dev/$ans mklabel gpt
+    parted -s /dev/$ans mkpart primary fat32 2048s 512m set 1 esp on
+    parted -s /dev/$ans mkpart primary ext4 512m 100%
+    mkfs.fat -F32 /dev/${ans}1
+    mkfs.ext4 -b 4096 -E lazy_itable_init=0,lazy_journal_init=0 /dev/${ans}2
+    echo "mount root and efi......"
+    mount /dev/${ans}2 /mnt
+    mkdir /mnt/boot
+    mount /dev/${ans}1 /mnt/boot
+  else
+    mount_other_exec 1
+  fi
+}
+
+function swapfile_mount ()
+{
+  echo "create swapfile and mount......"
+  dd if=/dev/zero of=/mnt/swapfile bs=1M count=$1 status=progress
+  chmod 600 /mnt/swapfile
+  mkswap /mnt/swapfile
+  swapon /mnt/swapfile
+}
+
+function modify_mirrorlist ()
+{
+  echo "modify mirrorlist......"
+  echo "Server = $1" > /tmp/mirrorlist
+  cat /etc/pacman.d/mirrorlist >> /tmp/mirrorlist
+  rm /etc/pacman.d/mirrorlist
+  mv /tmp/mirrorlist /etc/pacman.d/mirrorlist
+  pacman -Syy
+}
+
+function install_base_system ()
+{
+  echo "install base system......"
+  pacstrap /mnt base linux linux-firmware vim networkmanager os-prober
+  echo "note: mdadm is must for raid, exit to quit!"
+  while [ 1 ]
+  do
+    printf "install packages? name: "
+    read ans
+    if [ "$ans" = exit ]; then
+      break
+    fi
+    pacstrap /mnt $ans
+  done
+}
+
+function call_genfstab ()
+{
+  printf "genfstab......(n to skip): "
+  read ans
+  if ! [ "$ans" = n -o "$ans" = N ]; then
+    genfstab -U /mnt >> /mnt/etc/fstab
+  fi
+  cat /mnt/etc/fstab
+  printf "please input any keys to continue: "
+  read ans
+}
+
+function main ()
+{
+  connect_wifi
+  ls /sys/firmware/efi/efivars
+  printf "please input any keys to continue (n to skip to mount other): "
+  read ans
+  if ! [ "$ans" = n -o "$ans" = N ]; then
+    lsblk
+    printf "please input any keys to continue (n to skip to modify mirrorlist): "
+    read ans
+    if ! [ "$ans" = n -o "$ans" = N ]; then
+      echo "sync time......"
+      timedatectl set-ntp true
+      parted_and_mount
+      swapfile_mount 10240
+    fi
+    #modify_mirrorlist 'http://mirrors.ustc.edu.cn/archlinux/$repo/os/$arch'
+    reflector -c China -a 6 --sort rate --save /etc/pacman.d/mirrorlist
+    pacman -Syy
+    install_base_system
+  fi
+  lsblk
+  mount_other_exec
+  call_genfstab
+  cp ./archroot.sh /mnt/home/
+  cp ./archconf.sh /mnt/home/
+  chmod +x /mnt/home/archroot.sh
+  chmod +x /mnt/home/archconf.sh
+  arch-chroot /mnt /bin/sh -c "/home/archroot.sh"
+  printf "please input any keys to continue: "
+  read ans
+  umount -R /mnt
+  echo "installed finish......"
+}
+
+main
