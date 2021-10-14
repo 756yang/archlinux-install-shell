@@ -1,14 +1,13 @@
 # archlinux-install-shell
-Archlinux installation script written according to archlinux wiki.
+<br/>Archlinux installation script written according to archlinux wiki.</br>
+
+<br/>first get the archiso from official website.</br>
 
 
-first get the archiso from official website.
+<br/>second boot for the archiso and mount storage medium with the scripts.</br>
 
 
-second boot for the archiso and mount storage medium with the scripts.
-
-
-third cd the workspace to directory of scripts and run "sh ./archinstall.sh"
+<br/>third cd the workspace to directory of scripts and run "sh ./archinstall.sh"</br>
 
 any operation will ask you for confirm.
 
@@ -17,10 +16,10 @@ and it will install base system and chroot it to set bootloader.
 so the mini system installed finish!
 
 
-forth reboot and login root, you shuold cd workspace and run "./archconf.sh" to install system with graphics.
+<br/>forth reboot and login root, you shuold cd workspace and run "./archconf.sh" to install system with graphics.</br>
 
 
-fifth if you want to install some packages, you can run archappconf.sh to improve you experience.
+<br/>fifth if you want to install some packages, you can run archappconf.sh to improve you experience.</br>
 
 present the applications within is:
 
@@ -47,6 +46,6 @@ vmware-workstation for virtual machine
 more applications need to be added in it.
 
 
-make sure of you use archlinux kernel is linux.
+<br/>make sure of you use archlinux kernel is linux.</br>
 
 and you time zone is China otherwise you need to change it for first reboot.
