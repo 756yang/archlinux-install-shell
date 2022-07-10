@@ -19,6 +19,8 @@ function check_info ()
 }
 
 old_ALL_PROXY=$ALL_PROXY
+old_http_proxy=$http_proxy
+old_https_proxy=$https_proxy
 
 printf "install proxy tools for network......(n to skip) "
 read ans
@@ -35,12 +37,22 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   echo "install_packages qv2ray-plugin-ssr-git qv2ray-plugin-trojan-git qv2ray-plugin-trojan-go-git qv2ray-plugin-naiveproxy-git qv2ray-plugin-command cgproxy"
   echo "this packages recommend install from git compiler."
   read ans
-  export ALL_PROXY=socks5://127.0.0.1:1088
+  export http_proxy=127.0.0.1:8889
+  export all_proxy=socks5://127.0.0.1:1089
+  export ALL_PROXY=$all_proxy \
+       https_proxy=$http_proxy \
+       ftp_proxy=$http_proxy \
+       rsync_proxy=$http_proxy \
+       HTTP_PROXY=$http_proxy \
+       HTTPS_PROXY=$http_proxy \
+       FTP_PROXY=$http_proxy \
+       RSYNC_PROXY=$http_proxy
+  export ALL_PROXY=socks5://127.0.0.1:1089
 fi
 
 install_packages aurman
 
-echo "set .bashrc alias......(n to skip) "
+printf "set .bashrc alias......(n to skip) "
 read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
   if [ `tail -n 1 /home/${USER}/.bashrc | wc -l` == 0 ]; then
@@ -50,8 +62,8 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
     echo "alias gpuprime='optimus-manager --switch'" >> /home/${USER}/.bashrc
   fi
   if [ `pacman -Q | grep -w qv2ray` ]; then
-    echo "alias envproxy='export ALL_PROXY=socks5://127.0.0.1:1088'" >> /home/${USER}/.bashrc
-    echo "alias unproxy='unset ALL_PROXY'" >> /home/${USER}/.bashrc
+  echo "alias envproxy='export ALL_PROXY=socks5://127.0.0.1:1089 all_proxy=socks5://127.0.0.1:1089 http_proxy=127.0.0.1:8889 https_proxy=127.0.0.1:8889 HTTP_PROXY=127.0.0.1:8889 HTTPS_PROXY=127.0.0.1:8889'" >> /home/${USER}/.bashrc
+  echo "alias unproxy='unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY'" >> /home/${USER}/.bashrc
   fi
   if [ `pacman -Q | grep -w proxychains-ng` ]; then
     echo "alias p='proxychains'" >> /home/${USER}/.bashrc
@@ -63,11 +75,12 @@ fi
 
 echo "install application......"
 
-echo "install wine......(n to skip)"
+echo "install wine......"
 echo "note: may it bug that only intel gpu on wine but use hybrid or only nvidia can run it."
 echo "some of fonts you should install to display chinese words."
 echo "put fonts file to /usr/share/fonts and update by:"
-printf "use 'fc-cache -vf' to update font cache. "
+echo "use 'fc-cache -vf' to update font cache."
+printf "please input any key to continue (n to skip): "
 read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
   sudo pacman -S --needed wine wine-gecko wine-mono winetricks zenity
@@ -127,4 +140,6 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
 fi
 
 yay
-export ALL_PROXY=$old_ALL_PROXY
+unset http_proxy https_proxy ftp_proxy rsync_proxy all_proxy HTTP_PROXY HTTPS_PROXY FTP_PROXY RSYNC_PROXY ALL_PROXY
+export ALL_PROXY=$old_ALL_PROXY http_proxy=$old_http_proxy https_proxy=$old_https_proxy
+unset  old_ALL_PROXY old_http_proxy old_https_proxy

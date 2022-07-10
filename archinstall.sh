@@ -100,16 +100,20 @@ function parted_and_mount ()
   echo "create partition......"
   printf "please input install device like sda (any for manual): "
   read ans
+  nvme_part=
+  if [ ${ans:0:2} != sd ]; then
+    nvme_part=p
+  fi
   if [ "$ans" != any ]; then
     parted -s /dev/$ans mklabel gpt
     parted -s /dev/$ans mkpart primary fat32 2048s 512m set 1 esp on
     parted -s /dev/$ans mkpart primary ext4 512m 100%
-    mkfs.fat -F32 /dev/${ans}1
-    mkfs.ext4 -b 4096 -E lazy_itable_init=0,lazy_journal_init=0 /dev/${ans}2
+    mkfs.fat -F32 /dev/${ans}${nvme_part}1
+    mkfs.ext4 -b 4096 -E lazy_itable_init=0,lazy_journal_init=0 /dev/${ans}${nvme_part}2
     echo "mount root and efi......"
-    mount /dev/${ans}2 /mnt
+    mount /dev/${ans}${nvme_part}2 /mnt
     mkdir /mnt/boot
-    mount /dev/${ans}1 /mnt/boot
+    mount /dev/${ans}${nvme_part}1 /mnt/boot
   else
     mount_other_exec 1
   fi
@@ -117,11 +121,13 @@ function parted_and_mount ()
 
 function swapfile_mount ()
 {
-  echo "create swapfile and mount......"
-  dd if=/dev/zero of=/mnt/swapfile bs=1M count=$1 status=progress
-  chmod 600 /mnt/swapfile
-  mkswap /mnt/swapfile
-  swapon /mnt/swapfile
+  if [ $1 != 0 ]; then
+    echo "create swapfile and mount......"
+    dd if=/dev/zero of=/mnt/swapfile bs=1M count=$1 status=progress
+    chmod 600 /mnt/swapfile
+    mkswap /mnt/swapfile
+    swapon /mnt/swapfile
+  fi
 }
 
 function modify_mirrorlist ()
@@ -176,7 +182,9 @@ function main ()
       echo "sync time......"
       timedatectl set-ntp true
       parted_and_mount
-      swapfile_mount 10240
+      printf "please input swapfile size(M): "
+      read ans
+      swapfile_mount $ans
     fi
     #modify_mirrorlist 'http://mirrors.ustc.edu.cn/archlinux/$repo/os/$arch'
     reflector -c China -a 6 --sort rate --save /etc/pacman.d/mirrorlist
@@ -186,11 +194,11 @@ function main ()
   lsblk
   mount_other_exec
   call_genfstab
-  cp ./archroot.sh /mnt/home/
   cp ./archconf.sh /mnt/home/
-  chmod +x /mnt/home/archroot.sh
+  cp ./archappconf.sh /mnt/home/
   chmod +x /mnt/home/archconf.sh
-  arch-chroot /mnt /bin/sh -c "/home/archroot.sh"
+  chmod +x /mnt/home/archappconf.sh
+  bash archroot.sh
   printf "please input any keys to continue: "
   read ans
   umount -R /mnt

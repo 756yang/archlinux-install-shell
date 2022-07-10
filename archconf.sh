@@ -18,7 +18,7 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   nmtui
 fi
 
-username=root
+username=${username:-root}
 printf "create username......(n to skip) "
 read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
@@ -26,7 +26,7 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   read ans
   useradd -m -G wheel $ans
   passwd $ans
-  printf 'please uncomment "# %wheel" to sudo (enter to continue). '
+  printf 'please uncomment "# \%wheel" to sudo (enter to continue). '
   read ans
   pacman -S sudo
   EDITOR=vim visudo
@@ -51,7 +51,7 @@ read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
   if ! [ `ls /etc/pacman.d | grep -w hooks` ]; then mkdir /etc/pacman.d/hooks;fi
   cat << EOF > /etc/pacman.d/hooks/20-autoremove-tips.hook
-# autoremove tips when pacman post transcation
+# autoremove tips when pacman post transaction
 
 [Trigger]
 Operation = Install
@@ -203,7 +203,7 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   if [ "$ans" = y -o "$ans" = Y ]; then
     pacman -S pocl
   fi
-  pacman -S --needed vulkan-tools libva-utils vdpauinfo mesa-demos lib32-mesa-demos
+  pacman -S --needed vulkan-tools libva-utils vdpauinfo mesa-demos lib32-mesa-demos mesa-utils lib32-mesa-utils
   mkinitcpio -P
   check_info glxinfo -B
   check_info glxinfo32 -B
@@ -240,7 +240,7 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
     pacman -S --needed mate mate-extra lightdm network-manager-applet
     systemctl enable lightdm
   elif [ `expr match "$ans" "[L|l][X|x][Q|q][T|t]"` -eq 4 ]; then
-    pacman -S --needed sddm lxqt oxygen-icons network-manager-applet leafpad xscreensaver gvfs
+    pacman -S --needed sddm lxqt oxygen-icons network-manager-applet leafpad xscreensaver gvfs # openbox breeze-icons
     systemctl enable sddm
   elif [ `expr match "$ans" "[G|g][N|n][O|o][M|m][E|e]"` -eq 5 ]; then
     pacman -S --needed gnome gnome-extra
