@@ -121,12 +121,19 @@ function parted_and_mount ()
 
 function swapfile_mount ()
 {
-  if [ $1 != 0 ]; then
-    echo "create swapfile and mount......"
-    dd if=/dev/zero of=/mnt/swapfile bs=1M count=$1 status=progress
-    chmod 600 /mnt/swapfile
-    mkswap /mnt/swapfile
-    swapon /mnt/swapfile
+  echo "create swapfile and mount......"
+  printf "please input swapfile size(M), or a swap partion device: "
+  read ans
+  if [ $ans -gt 0 ] 2> /dev/null; then
+    if [ $ans != 0 ]; then
+      dd if=/dev/zero of=/mnt/swapfile bs=1M count=$1 status=progress
+      chmod 0600 /mnt/swapfile
+      mkswap -U clear /mnt/swapfile
+      swapon /mnt/swapfile
+    fi
+  else
+    mkswap $ans
+    swapon $ans
   fi
 }
 
@@ -144,7 +151,7 @@ function install_base_system ()
 {
   echo "install base system......"
   pacstrap /mnt base linux linux-firmware vim networkmanager os-prober
-  echo "note: mdadm is must for raid, exit to quit!"
+  echo "note: mdadm is must for raid, lvm2 must for lvm, exit to quit!"
   while [ 1 ]
   do
     printf "install packages? name: "
@@ -182,9 +189,6 @@ function main ()
       echo "sync time......"
       timedatectl set-ntp true
       parted_and_mount
-      printf "please input swapfile size(M): "
-      read ans
-      swapfile_mount $ans
     fi
     #modify_mirrorlist 'http://mirrors.ustc.edu.cn/archlinux/$repo/os/$arch'
     reflector -c China -a 6 --sort rate --save /etc/pacman.d/mirrorlist
@@ -193,6 +197,7 @@ function main ()
   fi
   lsblk
   mount_other_exec
+  swapfile_mount
   call_genfstab
   cp ./archconf.sh /mnt/home/
   cp ./archappconf.sh /mnt/home/

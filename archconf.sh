@@ -92,8 +92,14 @@ printf "hibernate configure with swap partion......(n to skip) "
 read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
   pacman -S --needed util-linux e2fsprogs
-  resume=`findmnt -no UUID -T /swapfile`
-  resume_offset=`filefrag -v /swapfile | awk '{ if($1=="0:"){print substr($4, 1, length($4)-2)} }'`
+  if [ `ls / | grep -w swapfile` ]; then
+    resume=`findmnt -no UUID -T /swapfile`
+    resume_offset=`filefrag -v /swapfile | awk '{ if($1=="0:"){print substr($4, 1, length($4)-2)} }'`
+  else
+    resume=(`cat /etc/fstab | grep -w swap | grep -w defaults`)
+    resume=${resume[0]:5}
+    resume_offset=0
+  fi
   cp /etc/default/grub /etc/default/grub.bak
   sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=\"/GRUB_CMDLINE_LINUX_DEFAULT=\"resume=UUID=$resume resume_offset=$resume_offset /" /etc/default/grub
   cat /etc/default/grub | grep GRUB_CMDLINE_LINUX_DEFAULT
@@ -103,7 +109,11 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
     grub-mkconfig -o /boot/grub/grub.cfg
     rm /etc/default/grub.bak
     cp /etc/mkinitcpio.conf /etc/mkinitcpio.conf.bak
-    sed -i "s/^HOOKS=(base udev/HOOKS=(base udev resume/" /etc/mkinitcpio.conf
+    if [ `pacman -Q | grep -w lvm2` ]; then
+      sed -i "s/^HOOKS=(\(base udev * block lvm2 filesystems\)/HOOKS=(\1 resume/" /etc/mkinitcpio.conf
+    else
+      sed -i "s/^HOOKS=(\(base udev * block filesystems\)/HOOKS=(\1 resume/" /etc/mkinitcpio.conf
+    fi
     cat /etc/mkinitcpio.conf | grep HOOKS
     printf "check HOOKS of mkinitcpio.conf (y to continue) "
     read ans
