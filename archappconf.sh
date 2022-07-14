@@ -58,14 +58,14 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   if [ `tail -n 1 /home/${USER}/.bashrc | wc -l` == 0 ]; then
     echo >> /home/${USER}/.bashrc
   fi
-  if [ `pacman -Q | grep -w optimus-manager` ]; then
+  if [ "`pacman -Q | grep -w optimus-manager`" ]; then
     echo "alias gpuprime='optimus-manager --switch'" >> /home/${USER}/.bashrc
   fi
-  if [ `pacman -Q | grep -w qv2ray` ]; then
+  if [ "`pacman -Q | grep -w qv2ray`" ]; then
   echo "alias envproxy='export ALL_PROXY=socks5://127.0.0.1:1089 all_proxy=socks5://127.0.0.1:1089 http_proxy=127.0.0.1:8889 https_proxy=127.0.0.1:8889 HTTP_PROXY=127.0.0.1:8889 HTTPS_PROXY=127.0.0.1:8889'" >> /home/${USER}/.bashrc
   echo "alias unproxy='unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY'" >> /home/${USER}/.bashrc
   fi
-  if [ `pacman -Q | grep -w proxychains-ng` ]; then
+  if [ "`pacman -Q | grep -w proxychains-ng`" ]; then
     echo "alias p='proxychains'" >> /home/${USER}/.bashrc
     echo "alias sp='sudo proxychains'" >> /home/${USER}/.bashrc
   fi
@@ -101,7 +101,7 @@ EOF
 fi
 
 # input-method
-if [ `pacman -Qq fcitx` ]; then
+if [ "`pacman -Qq fcitx`" ]; then
   install_packages fcitx-sogoupinyin
 fi
 

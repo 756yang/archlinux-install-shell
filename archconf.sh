@@ -49,7 +49,7 @@ fi
 printf "pacman hook configure autoremove tips......(n to skip) "
 read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
-  if ! [ `ls /etc/pacman.d | grep -w hooks` ]; then mkdir /etc/pacman.d/hooks;fi
+  if ! [ "`ls /etc/pacman.d | grep -w hooks`" ]; then mkdir /etc/pacman.d/hooks;fi
   cat << EOF > /etc/pacman.d/hooks/20-autoremove-tips.hook
 # autoremove tips when pacman post transaction
 
@@ -92,7 +92,7 @@ printf "hibernate configure with swap partion......(n to skip) "
 read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
   pacman -S --needed util-linux e2fsprogs
-  if [ `ls / | grep -w swapfile` ]; then
+  if [ "`ls / | grep -w swapfile`" ]; then
     resume=`findmnt -no UUID -T /swapfile`
     resume_offset=`filefrag -v /swapfile | awk '{ if($1=="0:"){print substr($4, 1, length($4)-2)} }'`
   else
@@ -109,11 +109,7 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
     grub-mkconfig -o /boot/grub/grub.cfg
     rm /etc/default/grub.bak
     cp /etc/mkinitcpio.conf /etc/mkinitcpio.conf.bak
-    if [ `pacman -Q | grep -w lvm2` ]; then
-      sed -i "s/^HOOKS=(\(base udev * block lvm2 filesystems\)/HOOKS=(\1 resume/" /etc/mkinitcpio.conf
-    else
-      sed -i "s/^HOOKS=(\(base udev * block filesystems\)/HOOKS=(\1 resume/" /etc/mkinitcpio.conf
-    fi
+    sed -i 's/^HOOKS=(\(base udev .* filesystems\)/HOOKS=(\1 resume/' /etc/mkinitcpio.conf
     cat /etc/mkinitcpio.conf | grep HOOKS
     printf "check HOOKS of mkinitcpio.conf (y to continue) "
     read ans
@@ -270,7 +266,7 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   pacman -S fcitx-im fcitx-configtool
   printf "you need logout and login to fcitx-configtool enable it. "
   read ans
-  if ! [ `ls -a /home/$username | grep -w .pam_environment` ]; then 
+  if ! [ "`ls -a /home/$username | grep -w .pam_environment`" ]; then 
     echo "GTK_IM_MODULE DEFAULT=fcitx" > /home/${username}/.pam_environment
     echo "QT_IM_MODULE  DEFAULT=fcitx" >> /home/${username}/.pam_environment
     echo "XMODIFIERS    DEFAULT=@im=fcitx" >> /home/${username}/.pam_environment
@@ -282,7 +278,7 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   pacman -S fcitx5-im
   printf "you need logout and login to fcitx5-configtool enable it. "
   read ans
-  if ! [ `ls -a /home/$username | grep -w .pam_environment` ]; then 
+  if ! [ "`ls -a /home/$username | grep -w .pam_environment`" ]; then 
     echo "GTK_IM_MODULE DEFAULT=fcitx" > /home/${username}/.pam_environment
     echo "QT_IM_MODULE  DEFAULT=fcitx" >> /home/${username}/.pam_environment
     echo "XMODIFIERS    DEFAULT=@im=fcitx" >> /home/${username}/.pam_environment
@@ -295,7 +291,7 @@ read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
   pacman -S ibus
   read ans
-  if ! [ `ls -a /home/$username | grep -w .pam_environment` ]; then 
+  if ! [ "`ls -a /home/$username | grep -w .pam_environment`" ]; then 
     echo "GTK_IM_MODULE DEFAULT=ibus" > /home/${username}/.pam_environment
     echo "QT_IM_MODULE  DEFAULT=ibus" >> /home/${username}/.pam_environment
     echo "XMODIFIERS    DEFAULT=@im=ibus" >> /home/${username}/.pam_environment

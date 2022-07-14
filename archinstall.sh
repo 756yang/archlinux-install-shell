@@ -4,7 +4,7 @@
 function connect_wifi ()
 {
   ip a
-  echo "connected wifi (n to skip)......"
+  printf "connected wifi (n to skip)...... "
   read ans
   if ! [ "$ans" = n -o "$ans" = N ]; then
     rfkill unblock wifi
@@ -23,18 +23,18 @@ function connect_wifi ()
 
 function mount_other_exec ()
 {
-  
-  if ! [ $* ]; then echo "mount other or exec......";fi
+  if ! [ "$*" ]; then echo "mount other or exec......";fi
   echo "manual mkpart and format, and mount......(short command list:)"
+  echo "help     show help info."
   echo "mkgpt    create a gpt partition label."
   echo "mkmbr    create a mbr partition label."
   echo "mkfat    format a fat32 filesystem."
   echo "mkext4    format a ext4 filesystem by lazy_init."
-  if [ $* ]; then
-    echo "mount_root    mount linux root to /mnt."
-    echo "mount_efi    mount efi partition to /mnt/boot/efi."
-    echo "mount_home    mount linux home to /mnt/home."
-    echo "mount_boot    mount linux boot to /mnt/boot (this can skip)."
+  if [ "$*" ]; then
+    echo "mntroot    mount linux root to /mnt."
+    echo "mntefi    mount efi partition to /mnt/boot/efi."
+    echo "mnthome    mount linux home to /mnt/home."
+    echo "mntboot    mount linux boot to /mnt/boot (this can skip)."
   fi
   printf "please input command to exec (cfdisk or parted...) (exit to quit): "
   while [ 1 ]
@@ -58,40 +58,51 @@ function mount_other_exec ()
       if ! [ "$ans" = n -o "$ans" = N ]; then
         mkfs.ext4 -b 4096 -E lazy_itable_init=0,lazy_journal_init=0 $ans
       fi
-    elif [ "$ans" = mount_root -a "$*" ]; then
+    elif [ "$ans" = mntroot -a "$*" ]; then
       printf "device path (n to cancel)? "
       read ans
       if ! [ "$ans" = n -o "$ans" = N ]; then mount $ans /mnt;fi
-    elif [ "$ans" = mount_efi -a "$*" ]; then
+    elif [ "$ans" = mntefi ]; then
       echo "please mount root first and this will mount on boot/efi."
       printf "device path (n to cancel)? "
       read ans
       if ! [ "$ans" = n -o "$ans" = N ]; then
-        if ! [ `ls /mnt | grep -w boot` ]; then mkdir /mnt/boot;fi
-        if ! [ `ls /mnt/boot | grep -w efi` ]; then mkdir /mnt/boot/efi;fi
+        if ! [ "`ls /mnt | grep -w boot`" ]; then mkdir /mnt/boot;fi
+        if ! [ "`ls /mnt/boot | grep -w efi`" ]; then mkdir /mnt/boot/efi;fi
         mount $ans /mnt/boot/efi
       fi
-    elif [ "$ans" = mount_home -a "$*" ]; then
+    elif [ "$ans" = mnthome ]; then
       printf "device path (n to cancel)? "
       read ans
       if ! [ "$ans" = n -o "$ans" = N ]; then
-        if ! [ `ls /mnt | grep -w home` ]; then mkdir /mnt/home;fi
+        if ! [ "`ls /mnt | grep -w home`" ]; then mkdir /mnt/home;fi
         mount $ans /mnt/home
       fi
-    elif [ "$ans" = mount_boot -a "$*" ]; then
+    elif [ "$ans" = mntboot ]; then
       echo "note that mount_boot must before mount_efi!"
       printf "device path (n to cancel)? "
       read ans
       if ! [ "$ans" = n -o "$ans" = N ]; then
-        if ! [ `ls /mnt | grep -w boot` ]; then mkdir /mnt/boot;fi
+        if ! [ "`ls /mnt | grep -w boot`" ]; then mkdir /mnt/boot;fi
         mount $ans /mnt/boot
       fi
+    elif [ "$ans" = help ]; then
+      echo "manual mkpart and format, and mount......(short command list:)"
+      echo "help     show help info."
+      echo "mkgpt    create a gpt partition label."
+      echo "mkmbr    create a mbr partition label."
+      echo "mkfat    format a fat32 filesystem."
+      echo "mkext4    format a ext4 filesystem by lazy_init."
+      echo "mntroot    mount linux root to /mnt."
+      echo "mntefi    mount efi partition to /mnt/boot/efi."
+      echo "mnthome    mount linux home to /mnt/home."
+      echo "mntboot    mount linux boot to /mnt/boot (this can skip)."
     elif [ "$ans" = exit ]; then
       break
     else
       eval $ans
     fi
-    printf "archinstall? "
+    printf "archinstall(or input bash)? "
   done
 }
 
@@ -126,7 +137,7 @@ function swapfile_mount ()
   read ans
   if [ $ans -gt 0 ] 2> /dev/null; then
     if [ $ans != 0 ]; then
-      dd if=/dev/zero of=/mnt/swapfile bs=1M count=$1 status=progress
+      dd if=/dev/zero of=/mnt/swapfile bs=1M count=$ans status=progress
       chmod 0600 /mnt/swapfile
       mkswap -U clear /mnt/swapfile
       swapon /mnt/swapfile
@@ -154,7 +165,7 @@ function install_base_system ()
   echo "note: mdadm is must for raid, lvm2 must for lvm, exit to quit!"
   while [ 1 ]
   do
-    printf "install packages? name: "
+    printf "install packages? name (exit to quit): "
     read ans
     if [ "$ans" = exit ]; then
       break
@@ -179,6 +190,7 @@ function main ()
 {
   connect_wifi
   ls /sys/firmware/efi/efivars
+  echo "you must install for a uefi system, please check!"
   printf "please input any keys to continue (n to skip to mount other): "
   read ans
   if ! [ "$ans" = n -o "$ans" = N ]; then

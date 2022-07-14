@@ -28,9 +28,9 @@ elif [ "$ans" = amd ]; then
   arch-chroot /mnt pacman -S amd-ucode.
 fi
 
-if [ `arch-chroot /mnt pacman -Q | grep -w lvm2` ]; then
+if [ "`arch-chroot /mnt pacman -Q | grep -w lvm2`" ]; then
   cp /mnt/etc/mkinitcpio.conf /mnt/etc/mkinitcpio.conf.bak
-  sed -i "s/^HOOKS=(\(base udev * block\)/HOOKS=(\1 lvm2/" /mnt/etc/mkinitcpio.conf
+  sed -i 's/^HOOKS=(\(base udev .* block\)/HOOKS=(\1 lvm2/' /mnt/etc/mkinitcpio.conf
   cat /mnt/etc/mkinitcpio.conf | grep HOOKS
   printf "check HOOKS of mkinitcpio.conf (y to continue) "
   read ans
