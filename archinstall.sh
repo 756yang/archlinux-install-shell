@@ -34,7 +34,7 @@ function mount_other_exec ()
     echo "mntroot    mount linux root to /mnt."
     echo "mntefi    mount efi partition to /mnt/boot/efi."
     echo "mnthome    mount linux home to /mnt/home."
-    echo "mntboot    mount linux boot to /mnt/boot (this can skip)."
+    echo "mntboot    mount linux boot to /mnt/boot."
   fi
   printf "please input command to exec (cfdisk or parted...) (exit to quit): "
   while [ 1 ]
@@ -96,13 +96,13 @@ function mount_other_exec ()
       echo "mntroot    mount linux root to /mnt."
       echo "mntefi    mount efi partition to /mnt/boot/efi."
       echo "mnthome    mount linux home to /mnt/home."
-      echo "mntboot    mount linux boot to /mnt/boot (this can skip)."
+      echo "mntboot    mount linux boot to /mnt/boot."
     elif [ "$ans" = exit ]; then
       break
     else
       eval $ans
     fi
-    printf "archinstall(or input bash)? "
+    printf "archinstall (or input bash)? "
   done
 }
 
