@@ -22,16 +22,17 @@ old_ALL_PROXY=$ALL_PROXY
 old_http_proxy=$http_proxy
 old_https_proxy=$https_proxy
 
+echo "--------------------------------"
 printf "install proxy tools for network......(n to skip) "
 read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
   install_packages v2ray qv2ray proxychains-ng
-  echo "please configure qv2ray kernel settings and socks5 proxy at 1088 port."
+  echo "please configure qv2ray kernel settings and socks5 proxy at 1089 port."
   echo "v2ray core path is /usr/bin/v2ray."
   echo "v2ray assets directory is /usr/share/v2ray."
   read ans
   qv2ray
-  printf "set proxychains.conf to use socks5 proxy at 1088 port. "
+  printf "set proxychains.conf to use socks5 proxy at 1089 port. "
   read ans
   sudo vim /etc/proxychains.conf
   echo "install_packages qv2ray-plugin-ssr-git qv2ray-plugin-trojan-git qv2ray-plugin-trojan-go-git qv2ray-plugin-naiveproxy-git qv2ray-plugin-command cgproxy"
@@ -52,6 +53,7 @@ fi
 
 install_packages aurman
 
+echo "--------------------------------"
 printf "set .bashrc alias......(n to skip) "
 read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
@@ -73,6 +75,7 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   read ans
 fi
 
+echo "--------------------------------"
 echo "install application......"
 
 echo "install wine......"

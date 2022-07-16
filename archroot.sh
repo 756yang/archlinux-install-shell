@@ -1,14 +1,19 @@
 #!/bin/sh
 
-
+echo "--------------------------------"
 echo "set time zone......"
 arch-chroot /mnt ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 arch-chroot /mnt timedatectl set-ntp true
 arch-chroot /mnt hwclock --systohc
 
+echo "--------------------------------"
 echo "localization......"
-printf "\nen_GB.UTF-8 UTF-8" >> /mnt/etc/locale.gen
-printf "\nen_US.UTF-8 UTF-8" >> /mnt/etc/locale.gen
+if ! [ "`cat /mnt/etc/locale.gen | grep -v '#' | grep 'en_GB.UTF-8 UTF-8'`" ]; then
+  printf "\nen_GB.UTF-8 UTF-8" >> /mnt/etc/locale.gen
+fi
+if ! [ "`cat /mnt/etc/locale.gen | grep -v '#' | grep 'en_US.UTF-8 UTF-8'`" ]; then
+  printf "\nen_US.UTF-8 UTF-8" >> /mnt/etc/locale.gen
+fi
 arch-chroot /mnt locale-gen
 printf "LANG=en_GB.UTF-8" > /mnt/etc/locale.conf
 printf "please input hostname: "
@@ -28,6 +33,8 @@ elif [ "$ans" = amd ]; then
   arch-chroot /mnt pacman -S amd-ucode.
 fi
 
+echo "--------------------------------"
+echo "mkinitcpio hooks......"
 if [ "`arch-chroot /mnt pacman -Q | grep -w lvm2`" ]; then
   cp /mnt/etc/mkinitcpio.conf /mnt/etc/mkinitcpio.conf.bak
   sed -i 's/^HOOKS=(\(base udev .* block\)/HOOKS=(\1 lvm2/' /mnt/etc/mkinitcpio.conf
@@ -42,7 +49,22 @@ if [ "`arch-chroot /mnt pacman -Q | grep -w lvm2`" ]; then
     mv /mnt/etc/mkinitcpio.conf.bak /mnt/etc/mkinitcpio.conf
   fi
 fi
+if [ "`arch-chroot /mnt pacman -Q | grep -w mdadm`" ]; then
+  cp /mnt/etc/mkinitcpio.conf /mnt/etc/mkinitcpio.conf.bak
+  sed -i 's/^HOOKS=(\(base udev .* block\)/HOOKS=(\1 mdadm_udev/' /mnt/etc/mkinitcpio.conf
+  cat /mnt/etc/mkinitcpio.conf | grep HOOKS
+  printf "check HOOKS of mkinitcpio.conf (y to continue) "
+  read ans
+  if [ "$ans" = y -o "$ans" = Y ]; then
+    arch-chroot /mnt mkinitcpio -p linux
+    rm /mnt/etc/mkinitcpio.conf.bak
+  else
+    rm /mnt/etc/mkinitcpio.conf
+    mv /mnt/etc/mkinitcpio.conf.bak /mnt/etc/mkinitcpio.conf
+  fi
+fi
 
+echo "--------------------------------"
 echo "install grub bootloader......"
 arch-chroot /mnt pacman -S grub efibootmgr
 printf "please input efi-directory: "

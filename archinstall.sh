@@ -4,6 +4,7 @@
 function connect_wifi ()
 {
   ip a
+  echo "--------------------------------"
   printf "connected wifi (n to skip)...... "
   read ans
   if ! [ "$ans" = n -o "$ans" = N ]; then
@@ -23,7 +24,10 @@ function connect_wifi ()
 
 function mount_other_exec ()
 {
-  if ! [ "$*" ]; then echo "mount other or exec......";fi
+  if ! [ "$*" ]; then 
+    echo "--------------------------------"
+    echo "mount other or exec......"
+  fi
   echo "manual mkpart and format, and mount......(short command list:)"
   echo "help     show help info."
   echo "mkgpt    create a gpt partition label."
@@ -108,6 +112,7 @@ function mount_other_exec ()
 
 function parted_and_mount ()
 {
+  echo "--------------------------------"
   echo "create partition......"
   printf "please input install device like sda (any for manual): "
   read ans
@@ -132,6 +137,7 @@ function parted_and_mount ()
 
 function swapfile_mount ()
 {
+  echo "--------------------------------"
   echo "create swapfile and mount......"
   printf "please input swapfile size(M), or a swap partion device: "
   read ans
@@ -150,6 +156,7 @@ function swapfile_mount ()
 
 function modify_mirrorlist ()
 {
+  echo "--------------------------------"
   echo "modify mirrorlist......"
   echo "Server = $1" > /tmp/mirrorlist
   cat /etc/pacman.d/mirrorlist >> /tmp/mirrorlist
@@ -160,6 +167,7 @@ function modify_mirrorlist ()
 
 function install_base_system ()
 {
+  echo "--------------------------------"
   echo "install base system......"
   pacstrap /mnt base linux linux-firmware vim networkmanager os-prober
   echo "note: mdadm is must for raid, lvm2 must for lvm, exit to quit!"
@@ -176,6 +184,7 @@ function install_base_system ()
 
 function call_genfstab ()
 {
+  echo "--------------------------------"
   printf "genfstab......(n to skip): "
   read ans
   if ! [ "$ans" = n -o "$ans" = N ]; then
@@ -198,6 +207,7 @@ function main ()
     printf "please input any keys to continue (n to skip to modify mirrorlist): "
     read ans
     if ! [ "$ans" = n -o "$ans" = N ]; then
+      echo "--------------------------------"
       echo "sync time......"
       timedatectl set-ntp true
       parted_and_mount

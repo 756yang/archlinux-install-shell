@@ -11,6 +11,7 @@ function check_info ()
 echo "[note] you linux kernel must be official from archlinux repositories."
 check_info pacman -Q linux
 
+echo "--------------------------------"
 printf "configure network......(n to skip) "
 read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
@@ -19,6 +20,7 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
 fi
 
 username=${username:-root}
+echo "--------------------------------"
 printf "create username......(n to skip) "
 read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
@@ -33,6 +35,7 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   username=$ans
 fi
 
+echo "--------------------------------"
 printf "modify mirrorlist and install yay base-devel......(n to skip) "
 read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
@@ -46,6 +49,7 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   pacman -S yay base-devel linux-headers
 fi
 
+echo "--------------------------------"
 printf "pacman hook configure autoremove tips......(n to skip) "
 read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
@@ -72,14 +76,8 @@ EOF
   if [ "$ans" = n -o "$ans" = N ]; then rm /etc/pacman.d/hooks/20-autoremove-tips.hook;fi
 fi
 
-echo "install acpi_call or bbswitch (choice one, bbswitch recommend)......"
-printf "install acpi_call(only official linux kernel support, n to skip) "
-read ans
-if ! [ "$ans" = n -o "$ans" = N ]; then
-  pacman -S acpi_call
-  echo "# load acpi_call at boot" > /etc/modules-load.d/acpi_call.conf
-  printf "acpi_call" >> /etc/modules-load.d/acpi_call.conf
-fi
+echo "--------------------------------"
+echo "install bbswitch or acpi_call (choice one, bbswitch recommend)......"
 printf "install bbswitch(only official linux kernel support, n to skip) "
 read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
@@ -87,7 +85,15 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   echo "# load bbswitch at boot" > /etc/modules-load.d/bbswitch.conf
   printf "bbswitch" >> /etc/modules-load.d/bbswitch.conf
 fi
+printf "install acpi_call(only official linux kernel support, n to skip) "
+read ans
+if ! [ "$ans" = n -o "$ans" = N ]; then
+  pacman -S acpi_call
+  echo "# load acpi_call at boot" > /etc/modules-load.d/acpi_call.conf
+  printf "acpi_call" >> /etc/modules-load.d/acpi_call.conf
+fi
 
+echo "--------------------------------"
 printf "hibernate configure with swap partion......(n to skip) "
 read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
@@ -126,6 +132,7 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   fi
 fi
 
+echo "--------------------------------"
 printf "install cpupower and input driver......(n to skip) "
 read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
@@ -154,6 +161,7 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   fi
 fi
 
+echo "--------------------------------"
 echo "install lspci lsusb utils......"
 pacman -S --needed pciutils usbutils
 echo "install p7zip for archiver utils......"
@@ -163,6 +171,7 @@ echo "using file manager with support gvfs, auto mount mtp devices."
 pacman -S --needed e2fsprogs ntfs-3g dosfstools exfatprogs fuse2 fuse3 mtpfs gvfs-mtp
 
 gpu_count=0
+echo "--------------------------------"
 printf "install GPU drivers......(n to skip) "
 read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
@@ -200,7 +209,7 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   read ans
   if [ "$ans" = y -o "$ans" = Y ]; then
     gpu_count=`expr $gpu_count + 1`
-    pacman -S --needed mesa xf86-video-vmware xf86-input-vmmouse open-vm-tools lib32-mesa
+    pacman -S --needed mesa xf86-video-vmware xf86-input-vmmouse open-vm-tools lib32-mesa gtkmm3
     systemctl enable --now vmtoolsd
     systemctl neable --now vmware-vmblock-fuse
   fi
@@ -230,6 +239,7 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   fi
 fi
 
+echo "--------------------------------"
 printf "install desktop environment......(n to skip) "
 read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
@@ -260,18 +270,8 @@ pacman -S --needed alsa-utils pulseaudio pulseaudio-alsa
 pacman -S --needed bluez-utils blueman pulseaudio-bluetooth
 pacman -S --needed ttf-dejavu ttf-liberation noto-fonts-cjk
 
-printf "fcitx install for input-method (n to skip) "
-read ans
-if ! [ "$ans" = n -o "$ans" = N ]; then
-  pacman -S fcitx-im fcitx-configtool
-  printf "you need logout and login to fcitx-configtool enable it. "
-  read ans
-  if ! [ "`ls -a /home/$username | grep -w .pam_environment`" ]; then 
-    echo "GTK_IM_MODULE DEFAULT=fcitx" > /home/${username}/.pam_environment
-    echo "QT_IM_MODULE  DEFAULT=fcitx" >> /home/${username}/.pam_environment
-    echo "XMODIFIERS    DEFAULT=@im=fcitx" >> /home/${username}/.pam_environment
-  fi
-fi
+echo "--------------------------------"
+echo "install input-method engine (fcitx5 recommend)......"
 printf "fcitx5 install for input-method (n to skip) "
 read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
@@ -286,6 +286,18 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
     echo "SDL_IM_MODULE DEFAULT=fcitx" >> /home/${username}/.pam_environment
   fi
 fi
+printf "fcitx install for input-method (n to skip) "
+read ans
+if ! [ "$ans" = n -o "$ans" = N ]; then
+  pacman -S fcitx-im fcitx-configtool
+  printf "you need logout and login to fcitx-configtool enable it. "
+  read ans
+  if ! [ "`ls -a /home/$username | grep -w .pam_environment`" ]; then 
+    echo "GTK_IM_MODULE DEFAULT=fcitx" > /home/${username}/.pam_environment
+    echo "QT_IM_MODULE  DEFAULT=fcitx" >> /home/${username}/.pam_environment
+    echo "XMODIFIERS    DEFAULT=@im=fcitx" >> /home/${username}/.pam_environment
+  fi
+fi
 printf "ibus install for input-method (n to skip) "
 read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
@@ -298,6 +310,7 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   fi
 fi
 
+echo "--------------------------------"
 echo "update system and packages......"
 pacman -Syyu
 echo "configure finish......"
