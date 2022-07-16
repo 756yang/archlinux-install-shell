@@ -9,6 +9,8 @@ function connect_wifi ()
   read ans
   if ! [ "$ans" = n -o "$ans" = N ]; then
     rfkill unblock wifi
+    printf "[General]\nEnableNetworkConfiguration=true" > /etc/iwd/main.conf
+    systemctl restart iwd
     printf "wifi interface? "
     read ans
     ip link set $ans up
@@ -18,6 +20,9 @@ function connect_wifi ()
     echo "station wlan0 connect <SSID>"
     echo "station wlan0 show"
     iwctl
+    systemctl restart systemd-networkd
+    systemctl restart systemd-resolved
+    ip a
   fi
   ping -c 4 archlinux.org
 }
@@ -169,7 +174,7 @@ function install_base_system ()
 {
   echo "--------------------------------"
   echo "install base system......"
-  pacstrap /mnt base linux linux-firmware vim networkmanager os-prober
+  pacstrap /mnt base linux linux-firmware vim networkmanager os-prober iwd
   echo "note: mdadm is must for raid, lvm2 must for lvm, exit to quit!"
   while [ 1 ]
   do

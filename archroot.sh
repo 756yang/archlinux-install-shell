@@ -25,7 +25,7 @@ echo "127.0.1.1	${ans}.localdomain	${ans}" >> /mnt/etc/hosts
 
 arch-chroot /mnt passwd
 
-printf "install microcode intel or amd (n to skip)? "
+printf "install microcode (input intel or amd, n to skip)? "
 read ans
 if [ "$ans" = intel ]; then
   arch-chroot /mnt pacman -S intel-ucode

@@ -90,7 +90,7 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   sudo pacman -S --needed lib32-alsa-lib lib32-alsa-plugins lib32-libpulse lib32-openal
   sudo pacman -S --needed lib32-mpg123 lib32-libpng lib32-giflib lib32-gnutls
   winecfg
-  cat << EOF > /tmp/winefontsmoothing
+  cat << "EOF" > /tmp/winefontsmoothing
 REGEDIT4
 
 [HKEY_CURRENT_USER\Control Panel\Desktop]
@@ -103,14 +103,17 @@ EOF
   sudo setcap cap_net_raw+epi /usr/bin/wine-preloader
 fi
 
+# browser
+install_packages firefox
+
 # input-method
-if [ "`pacman -Qq fcitx`" ]; then
+if [ "`pacman -Qq fcitx 2> /dev/null`" ]; then
   install_packages fcitx-sogoupinyin
 fi
 
 # word processing
 # [sloved] system DPI is asymmetric. WPS Office may have display issues by ttf-wps-fonts
-install_packages wps-office ttf-wps-fonts
+install_packages wps-office-cn ttf-wps-fonts wps-office-mui-zh-cn
 
 # picture processing
 install_packages gimp
@@ -118,12 +121,12 @@ install_packages gimp
 # codec
 install_packages ffmpeg
 
+# video player
+install_packages mpv-git smplayer svp
+
 # audio player
 install_packages audacious
 install_packages feeluown-full
-
-# video player
-install_packages mpv-git smplayer svp
 
 # android adb transmission screen
 install_packages qtscrcpy

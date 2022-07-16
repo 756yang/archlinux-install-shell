@@ -28,7 +28,7 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   read ans
   useradd -m -G wheel $ans
   passwd $ans
-  printf 'please uncomment "# \%wheel" to sudo (enter to continue). '
+  printf 'please uncomment "# %%wheel" to sudo (enter to continue). '
   read ans
   pacman -S sudo
   EDITOR=vim visudo
@@ -45,7 +45,18 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   printf "\n[archlinuxcn]\n" >> /etc/pacman.conf
   echo 'Server = https://mirrors.tuna.tsinghua.edu.cn/archlinuxcn/$arch' >> /etc/pacman.conf
   echo 'Server = https://mirrors.ustc.edu.cn/archlinuxcn/$arch' >> /etc/pacman.conf
-  pacman -Syy && pacman -S archlinuxcn-keyring
+  pacman -Syy && pacman -S archlinuxcn-keyring archlinux-keyring
+  printf "pacman-key reinit (if keyring errors, this fix it, or input n to skip): "
+  read ans
+  if ! [ "$ans" = n -o "$ans" = N ]; then
+    pacman -Syu haveged
+    systemctl enable --now haveged
+    rm -rf /etc/pacman.d/gnupg
+    pacman-key --init
+    pacman-key --populate archlinux
+    pacman-key --populate archlinuxcn
+    pacman -S archlinuxcn-keyring archlinux-keyring
+  fi
   pacman -S yay base-devel linux-headers
 fi
 
@@ -54,7 +65,7 @@ printf "pacman hook configure autoremove tips......(n to skip) "
 read ans
 if ! [ "$ans" = n -o "$ans" = N ]; then
   if ! [ "`ls /etc/pacman.d | grep -w hooks`" ]; then mkdir /etc/pacman.d/hooks;fi
-  cat << EOF > /etc/pacman.d/hooks/20-autoremove-tips.hook
+  cat << "EOF" > /etc/pacman.d/hooks/20-autoremove-tips.hook
 # autoremove tips when pacman post transaction
 
 [Trigger]
@@ -143,7 +154,21 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   ls /usr/lib/modules/`uname -r`/kernel/drivers/cpufreq/
   printf "input module you select(without suffix) (enter or inut 'intel_pstate' to skip): "
   read cpufreq_module
-  if [ "$cpufreq_module" -a "$cpufreq_module" != intel_pstate ]; then
+  if [ "$cpufreq_module" -a "$cpufreq_module" != "acpi-cpufreq" ]; then
+    cp /etc/default/grub /etc/default/grub.bak
+    sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=\"/GRUB_CMDLINE_LINUX_DEFAULT=\"module_blacklist=acpi-cpufreq /" /etc/default/grub
+    cat /etc/default/grub | grep GRUB_CMDLINE_LINUX_DEFAULT
+    printf "check GRUB_CMDLINE_LINUX_DEFAULT of grub (y to continue) "
+    read ans
+    if [ "$ans" = y -o "$ans" = Y ]; then
+      grub-mkconfig -o /boot/grub/grub.cfg
+      rm /etc/default/grub.bak
+    else
+      rm /etc/default/grub
+      mv /etc/default/grub.bak /etc/default/grub
+    fi
+  fi
+  if [ "$cpufreq_module" -a "$cpufreq_module" != "intel_pstate" ]; then
     cp /etc/default/grub /etc/default/grub.bak
     sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=\"/GRUB_CMDLINE_LINUX_DEFAULT=\"intel_pstate=disable /" /etc/default/grub
     cat /etc/default/grub | grep GRUB_CMDLINE_LINUX_DEFAULT
@@ -156,6 +181,8 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
       rm /etc/default/grub
       mv /etc/default/grub.bak /etc/default/grub
     fi
+  fi
+  if [ "$cpufreq_module" ]; then
     echo "# load $cpufreq_module at boot" > /etc/modules-load.d/cpufreq-${cpufreq_module}.conf
     printf "$cpufreq_module" >> /etc/modules-load.d/cpufreq-${cpufreq_module}.conf
   fi
