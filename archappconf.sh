@@ -111,6 +111,11 @@ if [ "`pacman -Qq fcitx 2> /dev/null`" ]; then
   install_packages fcitx-sogoupinyin
 fi
 
+if [ "`pacman -Qq fcitx5 2> /dev/null`" ]; then
+  install_packages fcitx5-chinese-addons fcitx5-rime
+  install_packages fcitx5-material-color fcitx5-pinyin-zhwiki fcitx5-pinyin-moegirl
+fi
+
 # word processing
 # [sloved] system DPI is asymmetric. WPS Office may have display issues by ttf-wps-fonts
 install_packages wps-office-cn ttf-wps-fonts wps-office-mui-zh-cn

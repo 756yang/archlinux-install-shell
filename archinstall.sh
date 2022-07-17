@@ -174,7 +174,7 @@ function install_base_system ()
 {
   echo "--------------------------------"
   echo "install base system......"
-  pacstrap /mnt base linux linux-firmware vim networkmanager os-prober iwd
+  pacstrap /mnt base linux linux-firmware vim networkmanager os-prober iwd bash
   echo "note: mdadm is must for raid, lvm2 must for lvm, exit to quit!"
   while [ 1 ]
   do

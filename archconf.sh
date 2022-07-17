@@ -152,25 +152,33 @@ if ! [ "$ans" = n -o "$ans" = N ]; then
   echo "you can watch cpufreq by: watch grep \\\"cpu MHz\\\" /proc/cpuinfo"
   echo "or real freq by: watch cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq"
   ls /usr/lib/modules/`uname -r`/kernel/drivers/cpufreq/
-  printf "input module you select(without suffix) (enter or inut 'intel_pstate' to skip): "
+  printf "input module you select(without suffix) (like 'intel_pstate', enter to skip): "
   read cpufreq_module
   if [ "$cpufreq_module" -a "$cpufreq_module" != "acpi-cpufreq" ]; then
-    cp /etc/default/grub /etc/default/grub.bak
-    sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=\"/GRUB_CMDLINE_LINUX_DEFAULT=\"module_blacklist=acpi-cpufreq /" /etc/default/grub
-    cat /etc/default/grub | grep GRUB_CMDLINE_LINUX_DEFAULT
-    printf "check GRUB_CMDLINE_LINUX_DEFAULT of grub (y to continue) "
+    cat /dev/null >> /etc/modprobe.d/blacklist.conf
+    cp /etc/modprobe.d/blacklist.conf /etc/modprobe.d/blacklist.conf.bak
+    if [ `tail -n 1 /etc/modprobe.d/blacklist.conf | wc -l` == 0 ]; then
+      echo >> /etc/modprobe.d/blacklist.conf
+    fi
+    echo "install acpi-cpufreq /bin/true" >> /etc/modprobe.d/blacklist.conf
+    cat /etc/modprobe.d/blacklist.conf
+    printf "check /etc/modprobe.d/blacklist.conf (y to continue) "
     read ans
     if [ "$ans" = y -o "$ans" = Y ]; then
-      grub-mkconfig -o /boot/grub/grub.cfg
-      rm /etc/default/grub.bak
+      mkinitcpio -P
+      rm /etc/modprobe.d/blacklist.conf.bak
     else
-      rm /etc/default/grub
-      mv /etc/default/grub.bak /etc/default/grub
+      rm /etc/modprobe.d/blacklist.conf
+      mv /etc/modprobe.d/blacklist.conf.bak /etc/modprobe.d/blacklist.conf
+      if ! [ -s /etc/modprobe.d/blacklist.conf ]; then rm /etc/modprobe.d/blacklist.conf; fi
     fi
   fi
   if [ "$cpufreq_module" -a "$cpufreq_module" != "intel_pstate" ]; then
     cp /etc/default/grub /etc/default/grub.bak
     sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=\"/GRUB_CMDLINE_LINUX_DEFAULT=\"intel_pstate=disable /" /etc/default/grub
+    if [ "$cpufreq_module" == "amd_pstate" ]; then
+      sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=\"/GRUB_CMDLINE_LINUX_DEFAULT=\"amd_pstate.replace=1 /" /etc/default/grub
+    fi
     cat /etc/default/grub | grep GRUB_CMDLINE_LINUX_DEFAULT
     printf "check GRUB_CMDLINE_LINUX_DEFAULT of grub (y to continue) "
     read ans
