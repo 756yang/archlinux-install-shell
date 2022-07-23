@@ -8,11 +8,14 @@ arch-chroot /mnt hwclock --systohc
 
 echo "--------------------------------"
 echo "localization......"
+if [ `tail -n 1 /mnt/etc/locale.gen | wc -l` == 0 ]; then
+  echo >> /mnt/etc/locale.gen
+fi
 if ! [ "`cat /mnt/etc/locale.gen | grep -v '#' | grep 'en_GB.UTF-8 UTF-8'`" ]; then
-  printf "\nen_GB.UTF-8 UTF-8" >> /mnt/etc/locale.gen
+  echo "en_GB.UTF-8 UTF-8" >> /mnt/etc/locale.gen
 fi
 if ! [ "`cat /mnt/etc/locale.gen | grep -v '#' | grep 'en_US.UTF-8 UTF-8'`" ]; then
-  printf "\nen_US.UTF-8 UTF-8" >> /mnt/etc/locale.gen
+  echo "en_US.UTF-8 UTF-8" >> /mnt/etc/locale.gen
 fi
 arch-chroot /mnt locale-gen
 printf "LANG=en_GB.UTF-8" > /mnt/etc/locale.conf
